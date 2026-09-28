@@ -1,13 +1,31 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>gifinder</title>
+    <title>GIFinder</title>
   </head>
   <body>
-    <div id="app"></div>
+    <div class="app-shell">
+      <header class="hero">
+        <p class="eyebrow">GIFinder</p>
+        <h1>Busca tus GIFs favoritos</h1>
+      </header>
+
+      <form id="search-form" class="search-form">
+        <label for="search-input">Buscar</label>
+        <div class="search-row">
+          <input id="search-input" type="search" placeholder="Buscar GIFs..." />
+          <button type="submit">Buscar</button>
+        </div>
+      </form>
+
+      <p id="status" class="status" aria-live="polite"></p>
+      <div id="gallery" class="gallery"></div>
+      <div id="detail"></div>
+    </div>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

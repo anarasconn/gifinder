@@ -1,34 +1,17 @@
-ana cristina rascon ochoa
-EC1 A1 FRONTEND
 # GIFinder
-Aplicación frontend desarrollada con Vite y TypeScript para consultar,
-buscar y visualizar contenido multimedia mediante la API de Giphy.
 
-## Tecnologías
-- HTML
-- CSS
-- TypeScript
-- Vite
-- PNPM
+## Funcionalidades actuales
+- Representación tipada de GIFs mediante la interfaz `Gif`.
+- Galería generada desde un arreglo local.
+- Búsqueda por título, autor, etiqueta y descripción.
+- Manejo del caso sin resultados (mensaje de “No se encontraron GIFs”).
 
-## Requisitos
-- Node.js LTS
-- PNPM
+## Estado del proyecto
+EC1 F1 A2 completada.  
+Los datos aún son locales; la integración con Giphy API se realizará después.
 
-## Instalación
+## Registro de avances con Git
 ```bash
-pnpm install
-
-
----
-
-
-# Preguntas de cierre - EC1 F1 A1
-
-## 1. ¿Qué función cumple Node.js en el entorno de desarrollo?
-Node.js permite ejecutar JavaScript fuera del navegador. En este proyecto lo usamos
-para correr Vite y manejar dependencias con PNPM.
-
-## 2. ¿Qué es PNPM y qué responsabilidad tiene?
-PNPM es el gestor de paquetes que instala y organiza las dependencias del proyecto.
-Se encarga de que tengamos las librerías necesarias sin duplicar archivos.
+git status
+git add .
+git commit -m "feat: completar galeria y busqueda local"
