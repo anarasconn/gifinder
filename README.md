@@ -1,17 +1,27 @@
-# GIFinder
+## Funcionalidad EC1 F3 A4
 
-## Funcionalidades actuales
-- Representación tipada de GIFs mediante la interfaz `Gif`.
-- Galería generada desde un arreglo local.
-- Búsqueda por título, autor, etiqueta y descripción.
-- Manejo del caso sin resultados (mensaje de “No se encontraron GIFs”).
+GIFinder consulta GIPHY API para mostrar tendencias,
+realizar búsquedas y consultar el detalle de un GIF.
 
-## Estado del proyecto
-EC1 F1 A2 completada.  
-Los datos aún son locales; la integración con Giphy API se realizará después.
+## Configuración de la API
 
-## Registro de avances con Git
+1. Crear una clave individual en GIPHY Developers.
+2. Crear `.env.local` en la raíz del proyecto.
+3. Agregar la variable:
+
+```text
+VITE_GIPHY_API_KEY=TU_CLAVE
+```
+
+4. Reiniciar el servidor de Vite.
+
+`.env.local` no debe publicarse. El repositorio incluye
+`.env.example` únicamente como referencia.
+
+## Verificación
+
 ```bash
-git status
-git add .
-git commit -m "feat: completar galeria y busqueda local"
+pnpm install
+pnpm dev
+pnpm build
+```

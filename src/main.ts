@@ -1,76 +1,165 @@
 import './styles/style.css';
-
-import { createGifCard } from './components/gallery';
-import { renderGifDetail } from './components/gif-details';
+import {
+  clearGifDetail,
+  renderGifDetail,
+} from './components/gif-detail';
+import { renderGallery } from './components/gallery';
 import { renderStatus } from './components/status';
-import { searchGifs, findGifById } from './services/gif.service';
-import type { RequestStatus } from './models/request-status.enum';
 import type { Gif } from './models/gif.interface';
+import { RequestStatus } from './models/request-status.enum';
+import {
+  findGifById,
+  getTrendingGifs,
+  searchGifs,
+} from './services/gif.service';
+import { getRequiredElement } from './utils/dom';
 
-const form = document.querySelector<HTMLFormElement>('#search-form');
-const input = document.querySelector<HTMLInputElement>('#search-input');
-const gallery = document.querySelector<HTMLDivElement>('#gallery');
-const detail = document.querySelector<HTMLDivElement>('#detail');
-const status = document.querySelector<HTMLParagraphElement>('#status');
+const app = getRequiredElement<HTMLDivElement>('#app');
 
-if (!form || !input || !gallery || !detail || !status) {
-  throw new Error('No se encontraron los elementos del DOM necesarios para GIFinder.');
+app.innerHTML = `
+  <main class="app-shell">
+    <header class="hero">
+      <p class="eyebrow">EC1 - Programación asíncrona</p>
+      <h1>GIFinder</h1>
+      <p>Busca contenido mediante la API de GIPHY.</p>
+    </header>
+
+    <form id="search-form" class="search-form">
+      <label for="search-input">Buscar GIF</label>
+      <div class="search-row">
+        <input
+          id="search-input"
+          name="query"
+          type="search"
+          maxlength="50"
+          placeholder="Ejemplo: programación"
+          autocomplete="off"
+        />
+        <button type="submit">Buscar</button>
+      </div>
+    </form>
+
+    <p
+      id="search-status"
+      class="status"
+      role="status"
+      aria-live="polite"
+    ></p>
+
+    <section
+      id="gif-gallery"
+      class="gallery"
+      aria-label="Resultados"
+    ></section>
+
+    <aside
+      id="gif-detail"
+      class="gif-detail-container"
+      aria-live="polite"
+    ></aside>
+
+    <footer class="giphy-attribution">
+      <a href="https://giphy.com/" target="_blank" rel="noopener noreferrer">
+        <img src="/powered-by-giphy.png" alt="Powered by GIPHY" />
+      </a>
+    </footer>
+  </main>
+`;
+
+const form = getRequiredElement<HTMLFormElement>('#search-form');
+const input = getRequiredElement<HTMLInputElement>('#search-input');
+const gallery = getRequiredElement<HTMLElement>('#gif-gallery');
+const status = getRequiredElement<HTMLParagraphElement>(
+  '#search-status',
+);
+const detailContainer = getRequiredElement<HTMLElement>('#gif-detail');
+
+let currentGifs: Gif[] = [];
+
+function showResults(results: Gif[]): void {
+  currentGifs = results;
+  renderGallery(currentGifs, gallery);
+  renderStatus(
+    currentGifs.length > 0
+      ? RequestStatus.Success
+      : RequestStatus.Empty,
+    status,
+    currentGifs.length,
+  );
 }
 
-const formEl = form;
-const inputEl = input;
-const galleryEl = gallery;
-const detailEl = detail;
-const statusEl = status;
+function showRequestError(error: unknown): void {
+  const message = error instanceof Error
+    ? error.message
+    : 'Error desconocido.';
 
-function updateStatus(state: RequestStatus) {
-  statusEl.textContent = renderStatus(state);
+  console.error(message);
+  currentGifs = [];
+  renderGallery(currentGifs, gallery);
+  clearGifDetail(detailContainer);
+  renderStatus(RequestStatus.Error, status);
 }
 
-function renderGallery(gifs: Gif[]) {
-  galleryEl.innerHTML = gifs.map(createGifCard).join('');
-}
-
-function clearDetail() {
-  detailEl.innerHTML = '';
-}
-
-formEl.addEventListener('submit', event => {
-  event.preventDefault();
-  clearDetail();
-  updateStatus('Loading');
+async function loadTrending(): Promise<void> {
+  renderStatus(RequestStatus.Loading, status);
 
   try {
-    const results = searchGifs(inputEl.value);
-    if (results.length === 0) {
-      updateStatus('Empty');
-      galleryEl.innerHTML = '';
-    } else {
-      updateStatus('Success');
-      renderGallery(results);
-    }
-  } catch {
-    updateStatus('Error');
+    const results = await getTrendingGifs();
+    showResults(results);
+  } catch (error: unknown) {
+    showRequestError(error);
+  }
+}
+
+form.addEventListener('submit', async (event: SubmitEvent) => {
+  event.preventDefault();
+  renderStatus(RequestStatus.Loading, status);
+  clearGifDetail(detailContainer);
+
+  try {
+    const results = await searchGifs(input.value);
+    showResults(results);
+  } catch (error: unknown) {
+    showRequestError(error);
   }
 });
 
-galleryEl.addEventListener('click', event => {
-  const target = event.target as HTMLElement;
-  if (target.matches('.detail-btn')) {
-    const id = target.getAttribute('data-gif-id');
-    if (!id) return;
+gallery.addEventListener('click', (event) => {
+  const target = event.target;
 
-    const gif = findGifById(id);
-    if (gif) {
-      detailEl.innerHTML = renderGifDetail(gif);
+  if (!(target instanceof Element)) {
+    return;
+  }
 
-      const closeBtn = document.querySelector<HTMLButtonElement>('#close-detail');
-      closeBtn?.addEventListener('click', () => {
-        clearDetail();
-      });
-    }
+  const detailButton = target.closest<HTMLButtonElement>('[data-gif-id]');
+
+  if (!detailButton?.dataset.gifId) {
+    return;
+  }
+
+  const selectedGif = findGifById(
+    currentGifs,
+    detailButton.dataset.gifId,
+  );
+
+  if (!selectedGif) {
+    renderStatus(RequestStatus.Error, status);
+    return;
+  }
+
+    renderGifDetail(selectedGif, detailContainer);
+  detailContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+detailContainer.addEventListener('click', (event) => {
+  const target = event.target;
+
+  if (
+    target instanceof Element
+    && target.closest('[data-action="close-detail"]')
+  ) {
+    clearGifDetail(detailContainer);
   }
 });
 
-updateStatus('Initial');
-renderGallery(searchGifs(''));
+renderStatus(RequestStatus.Initial, status);
+void loadTrending();
